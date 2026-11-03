@@ -103,6 +103,20 @@ def _cell_value(job: JobPosting, column: str):
     return "" if value is None else value
 
 
+def _write_text(ws: Worksheet, row: int, column: int, value):
+    """Write a cell that may hold scraped or AI-generated text.
+
+    openpyxl stores any string starting with ``=`` as a formula, so a job title
+    like ``=HYPERLINK(...)`` posted on a marketplace would execute when the
+    workbook is opened. Forcing the type back to string keeps the text verbatim
+    but inert.
+    """
+    cell = ws.cell(row=row, column=column, value=value)
+    if cell.data_type == "f":
+        cell.data_type = "s"
+    return cell
+
+
 def _band_for(score) -> tuple[str, str] | None:
     """(colour, meaning) for a score, or None when there's no score to band."""
     if not isinstance(score, int):
@@ -221,7 +235,7 @@ def _write_jobs_sheet(ws: Worksheet, jobs: list[JobPosting]) -> None:
         zebra = (row_idx % 2) == 1
         for col_idx, column in enumerate(EXCEL_COLUMNS, start=1):
             value = _cell_value(job, column)
-            cell = ws.cell(row=row_idx, column=col_idx, value=value)
+            cell = _write_text(ws, row_idx, col_idx, value)
             cell.border = _CELL_BORDER
             cell.alignment = Alignment(
                 vertical="top",
@@ -342,8 +356,8 @@ def _write_summary_sheet(
                 score_cell.fill = PatternFill("solid", fgColor=band[0])
             score_cell.alignment = Alignment(horizontal="center")
             score_cell.border = _CELL_BORDER
-            ws.cell(row=row, column=2, value=job.platform)
-            title = ws.cell(row=row, column=3, value=job.job_title)
+            _write_text(ws, row, 2, job.platform)
+            title = _write_text(ws, row, 3, job.job_title)
             if job.job_url:
                 title.hyperlink = job.job_url
                 title.font = _LINK_FONT
