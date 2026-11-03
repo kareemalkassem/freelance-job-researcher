@@ -1,0 +1,59 @@
+{
+  "status": "success",
+  "result": {
+    "projects": [
+      {
+        "id": 39000001,
+        "owner_id": 111,
+        "title": "Build a Flutter mobile app with GetX",
+        "seo_url": "mobile-phone/build-flutter-app-39000001",
+        "type": "fixed",
+        "submitdate": 1752835200,
+        "currency": { "code": "USD", "sign": "$" },
+        "budget": { "minimum": 250, "maximum": 750 },
+        "preview_description": "We need a cross-platform Flutter app using GetX and clean architecture. iOS and Android.",
+        "jobs": [
+          { "id": 1, "name": "Flutter" },
+          { "id": 2, "name": "Dart" },
+          { "id": 3, "name": "Mobile App Development" }
+        ]
+      },
+      {
+        "id": 39000002,
+        "owner_id": 222,
+        "title": "Hourly React web developer",
+        "seo_url": "javascript/react-web-dev-39000002",
+        "type": "hourly",
+        "submitdate": 1752838800,
+        "currency": { "code": "USD", "sign": "$" },
+        "budget": { "minimum": 15, "maximum": 30 },
+        "preview_description": "Ongoing React work for a web dashboard.",
+        "jobs": [{ "id": 4, "name": "React.js" }]
+      }
+    ],
+    "users": {
+      "111": {
+        "id": 111,
+        "username": "acme_apps",
+        "display_name": "Acme Apps",
+        "location": { "country": { "name": "United States" } },
+        "employer_reputation": {
+          "entire_history": {
+            "overall": 4.8,
+            "all": 42,
+            "completion_rate": 0.9
+          }
+        }
+      },
+      "222": {
+        "id": 222,
+        "username": "webco",
+        "display_name": "WebCo",
+        "location": { "country": { "name": "Canada" } },
+        "employer_reputation": {
+          "entire_history": { "overall": 4.2, "all": 10, "completion_rate": 0.8 }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,348 @@
+# Freelance Job Researcher — runtime configuration.
+# Everything tunable lives here so code changes aren't needed to adjust the search.
+
+# How far back a job may have been posted to still count as "fresh".
+# 72h (3 days), widened from 24h. Freelance posts stay live and biddable for a
+# few days, and a 24h window threw away most of each fetch. Push to 168 for a
+# full week if you want maximum volume; drop back toward 48 if the sheet starts
+# feeling stale.
+lookback_hours: 72
+
+# Where the .xlsx lands (relative to project root, or absolute).
+output_dir: "output"
+
+# Politeness delay between HTTP requests to the same host (seconds).
+request_delay_seconds: 2.5
+
+# Transient-failure retries per request (network errors, 429, 5xx only).
+http_retry_attempts: 3
+
+# Raw HTML is saved here when a fetch succeeds but parses to zero rows —
+# the signature of a site changing its markup.
+snapshot_dir: "logs/snapshots"
+
+# A job is kept only if one of these appears in its title/skills/summary.
+# This is the GATE (in or out), not the ranking — ranking is scoring.keyword_weights.
+#
+# Matching is plain substring, case-insensitive, with NO word boundaries. That
+# rules out short ambiguous terms: a bare "ai" would match email/detail/available
+# and flood the sheet, so AI work is gated on "llm"/"openai"/"ai agent" instead.
+# "java" does match "javascript" — harmless here since both are yours.
+keywords:
+  # --- mobile (primary) ---
+  - flutter
+  - dart
+  - getx
+  - clean architecture
+  - mobile app
+  - mobile application
+  - ios
+  - android
+  - cross-platform
+  - cross platform
+  # --- languages ---
+  - java
+  - "c++"
+  - "c#"
+  - .net
+  - php
+  # --- web ---
+  - react
+  - laravel
+  - javascript
+  - typescript
+  - html
+  - css
+  - tailwind
+  - next.js
+  - node.js
+  # --- AI & agentic tooling ---
+  - llm
+  - openai
+  - langchain
+  - chatbot
+  - "ai agent"
+  - "ai-powered"
+  - rag
+  - prompt engineering
+  # --- data & machine learning ---
+  - python
+  - pandas
+  - scikit
+  - xgboost
+  - machine learning
+  - data analysis
+  - data science
+  - predictive model
+  # --- devops, data stores, QA ---
+  - sql
+  - postgres
+  - mysql
+  - mongodb
+  - ci/cd
+  - devops
+  - docker
+  - test automation
+  - qa engineer
+  - selenium
+  - appium
+  # --- Arabic ---
+  - تطبيق
+  - تطبيقات
+  - اندرويد
+  - أندرويد
+  - ايفون
+  - آيفون
+  - فلاتر
+  - موقع الكتروني
+  - برمجة
+  - ذكاء اصطناعي
+
+# Legacy flat list — still used as the keyword weights when `scoring.keyword_weights`
+# below is empty. Kept so an older config keeps working.
+high_value_keywords:
+  - flutter
+  - getx
+  - clean architecture
+  - dart
+  - mobile
+
+# --------------------------------------------------------------------------
+# Scoring — how the 0-100 number in the sheet is produced.
+# --------------------------------------------------------------------------
+scoring:
+  # Weighted keyword hits. Higher = stronger signal that this is YOUR job.
+  # Tiered to the skills profile: 4 = core specialism, 3 = strong secondary,
+  # 2 = solid working knowledge, 1 = supporting/adjacent. A job stacking several
+  # of your skills outscores one that only grazes a single keyword.
+  keyword_weights:
+    # --- tier 1: core specialism (Flutter/Dart/GetX/Clean Architecture) ---
+    flutter: 8
+    فلاتر: 8
+    getx: 6
+    dart: 5
+    clean architecture: 4
+    cross-platform: 2
+    cross platform: 2
+    mobile app: 2
+    mobile application: 2
+    تطبيق جوال: 2
+    تطبيقات: 2
+
+    # --- tier 2: strong secondary (web + data/ML you ship with) ---
+    react: 3
+    laravel: 3
+    python: 3
+    machine learning: 3
+    data science: 2
+    data analysis: 2
+    pandas: 2
+    scikit: 2
+    xgboost: 2
+    predictive model: 2
+    typescript: 2
+    javascript: 2
+    node.js: 2
+    next.js: 2
+
+    # --- tier 3: languages & platforms in your stack ---
+    java: 2
+    "c#": 2
+    "c++": 2
+    .net: 2
+    php: 2
+    html: 1
+    css: 1
+    tailwind: 1
+
+    # --- tier 4: AI-assisted / agentic work (a differentiator, priced well) ---
+    llm: 3
+    "ai agent": 3
+    langchain: 2
+    openai: 2
+    rag: 2
+    prompt engineering: 2
+    chatbot: 1
+    "ai-powered": 1
+    ذكاء اصطناعي: 2
+
+    # --- tier 5: QA, DevOps, data stores, delivery ---
+    test automation: 2
+    qa engineer: 2
+    appium: 2
+    selenium: 1
+    ci/cd: 1
+    devops: 1
+    docker: 1
+    sql: 1
+    postgres: 1
+    mysql: 1
+    mongodb: 1
+
+    # --- supporting signals ---
+    android: 1
+    اندرويد: 1
+    أندرويد: 1
+    ios: 1
+    ايفون: 1
+    آيفون: 1
+    تطبيق: 1
+    جوال: 1
+    موبايل: 1
+    برمجة: 1
+    firebase: 1
+    api: 1
+
+  # Raw weight that counts as a perfect keyword score.
+  #
+  # Raised from 10 when the profile broadened. At 10 a generic full-stack post
+  # stacking eight shallow terms (react+js+node+html+css+sql+postgres+python)
+  # scored the same 100 as a dedicated Flutter contract — 87 jobs tied at the
+  # top and the ranking stopped ranking. Tier-1 mobile terms now carry enough
+  # weight that depth in your specialism outscores breadth of buzzwords.
+  keyword_cap: 18
+
+  # Points subtracted from the final 0-100 score when the term appears.
+  # NOTE: the `php: 10` penalty was removed — PHP and Laravel are on your
+  # skills list, so the old config was demoting work you can actually do.
+  # WordPress/Shopify stay penalised: they are commodity template gigs, not
+  # the PHP/Laravel engineering you'd want to be hired for.
+  negative_keywords:
+    wordpress: 20
+    shopify: 15
+    "revenue share": 35
+    "profit share": 35
+    equity: 25
+    "no budget": 20
+    "شراكة بالأرباح": 35
+
+  # Present at any strength -> the job never reaches the sheet.
+  exclude_keywords:
+    - unpaid
+    - "بدون مقابل"
+    - "for free"
+    - "مجانا"
+
+  # How much each component contributes before penalties.
+  weights:
+    keywords: 0.7
+    client: 0.3
+
+  client:
+    # Mostaql/Khamsat listings expose no rating, budget or hire rate. Scoring
+    # that absence as 0 would bury every Arabic job under every Freelancer job,
+    # so "no signals at all" scores neutral instead. Set false to score it 0.
+    unknown_is_neutral: true
+    good_rating: 4.5          # client_rating at/above this = full marks
+    good_hire_rate: 70        # hire-rate % at/above this = full marks
+    good_jobs_posted: 20      # jobs posted at/above this = full marks
+    good_budget: 500          # fixed-price budget (USD) at/above this = full marks
+    good_hourly: 25           # hourly rate (USD) at/above this = full marks
+
+  # Rough USD conversion so a 3000 EGP job doesn't outrank a 400 USD one on
+  # digit count alone. Unknown codes pass through at 1.0.
+  currency_rates:
+    USD: 1.0
+    EUR: 1.08
+    GBP: 1.27
+    AUD: 0.66
+    CAD: 0.73
+    INR: 0.012
+    SAR: 0.27
+    AED: 0.27
+    EGP: 0.021
+
+# --------------------------------------------------------------------------
+# AI pass — optional. provider: none | anthropic | ollama
+# Only jobs that already passed the keyword + recency gates are ever sent,
+# results are cached by URL, and any failure falls back to the keyword score.
+# --------------------------------------------------------------------------
+ai:
+  provider: none
+  model: "claude-haiku-4-5-20251001"   # ollama example: "llama3.1"
+  max_tokens: 300
+  cache_path: "cache/ai_scores.json"
+  min_match_score: 25       # don't pay to judge obviously-weak jobs
+  max_jobs_per_run: 25      # hard cost ceiling per run
+
+  # Stretch item: embedding similarity catches jobs that describe your work
+  # without using your keywords. Needs a local Ollama with an embedding model.
+  semantic:
+    enabled: false
+    model: "nomic-embed-text"
+    cache_path: "cache/embeddings.json"
+    blend_weight: 0.0       # >0 folds the semantic score into match_score
+    profile: ""             # blank uses the built-in Flutter/mobile profile
+
+# --------------------------------------------------------------------------
+# Memory of what you've already seen, so NEW means new.
+# --------------------------------------------------------------------------
+history:
+  path: "cache/seen_jobs.json"
+  retention_days: 30
+
+# Flag a platform whose scraper has returned nothing for this many runs.
+health:
+  path: "cache/scraper_health.json"
+  alert_after_runs: 3
+
+# --------------------------------------------------------------------------
+# Optional alerts for high-scoring new jobs. Off by default.
+# Secrets (bot token, SMTP password) live in .env, never here.
+# --------------------------------------------------------------------------
+notify:
+  enabled: false
+  channels: []          # e.g. ["telegram"] or ["telegram", "email"]
+  # Tuned to the observed distribution on 2026-07-24 (11 jobs: 72, 58, 54, 53,
+  # 43, 43, 38, 36, 22, 15, 9). 60 alerts on the genuinely strong ones only.
+  # Raise it once the AI pass is on, since fit scores use the full 0-100 range.
+  min_score: 60
+  max_items: 5
+  new_only: true
+  telegram:
+    chat_id: ""         # or set TELEGRAM_CHAT_ID in .env
+  email:
+    smtp_host: ""
+    smtp_port: 587
+    use_tls: true
+    use_ssl: false
+    from: ""
+    to: ""
+    subject: "New freelance matches"
+
+platforms:
+  freelancer:
+    enabled: true
+    # The API filters SERVER-SIDE, so only these terms are ever seen — keywords
+    # above can only narrow what comes back, never widen it. One request per
+    # term (spaced by request_delay_seconds), results merged and de-duplicated.
+    # Ordered by how much of your billable time each represents; trim the tail
+    # if runs get slow, or add terms as your focus shifts.
+    queries:
+      - "Flutter"
+      - "Dart"
+      - "Mobile App"
+      - "React"
+      - "Laravel"
+      - "Python"
+      - "Machine Learning"
+      - "AI Agent"
+    limit: 50
+  mostaql:
+    enabled: true
+    # "development" = برمجة، تطوير المواقع والتطبيقات (programming/web/app dev).
+    # Server-side filter: https://mostaql.com/projects?category=development
+    category: "development"
+    max_pages: 4
+    snapshot_on_empty: true
+    # Budget, skills and the client's hire rate live on the per-project detail
+    # page, not the listing. Enrichment runs AFTER filtering, so it costs one
+    # request per surviving job (a dozen) instead of one per fetched job.
+    enrich_details: true
+    detail_max_jobs: 25
+  khamsat:
+    enabled: true
+    # Buyer requests board (/community/requests) — Khamsat's main catalogue is
+    # sellers advertising services, which is the wrong direction for us.
+    # The board serves a fixed 25 newest requests; pagination params are ignored.
+    snapshot_on_empty: true
